@@ -1,0 +1,31 @@
+# Flutter
+.dart_tool/
+.packages
+.pub/
+build/
+*.g.dart
+*.freezed.dart
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+
+# Environment
+.env
+*.env.local
+
+# Firebase
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated
+*.g.dart
+*.freezed.dart
+*.mocks.dart

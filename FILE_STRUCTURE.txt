@@ -1,0 +1,71 @@
+DreamWeaver Flutter App - Complete File Structure
+=====================================================
+
+lib/
+├── features/
+│   ├── player/
+│   │   ├── screens/
+│   │   │   └── player_screen.dart (1)
+│   │   └── widgets/
+│   │       ├── playback_controls.dart (2)
+│   │       ├── progress_bar.dart (3)
+│   │       └── background_music_toggle.dart (4)
+│   │
+│   ├── content/
+│   │   ├── screens/
+│   │   │   ├── content_detail_screen.dart (5)
+│   │   │   ├── content_library_screen.dart (6)
+│   │   │   └── category_browse_screen.dart (7)
+│   │   └── widgets/
+│   │       └── album_art_display.dart (8)
+│   │
+│   ├── customization/
+│   │   ├── screens/
+│   │   │   ├── story_customization_screen.dart (9)
+│   │   │   └── voice_selection_screen.dart (10)
+│   │   └── widgets/
+│   │       ├── length_slider.dart (11)
+│   │       └── content_type_selector.dart (12)
+│   │
+│   ├── subscription/
+│   │   ├── screens/
+│   │   │   └── subscription_screen.dart (13)
+│   │   └── widgets/
+│   │       └── tier_comparison_card.dart (14)
+│   │
+│   ├── search/
+│   │   └── screens/
+│   │       └── search_screen.dart (15)
+│   │
+│   └── settings/
+│       └── screens/
+│           └── settings_screen.dart (16)
+│
+└── widgets/
+    └── common/
+        ├── dream_app_bar.dart (17)
+        ├── bottom_nav.dart (18)
+        ├── loading_indicator.dart (19)
+        ├── empty_state.dart (20)
+        └── content_type_badge.dart (21)
+
+
+TOTAL: 21 Files Created
+========================
+
+Player Screens & Widgets: 4 files
+Content Screens & Widgets: 4 files
+Customization Screens & Widgets: 4 files
+Subscription Screens & Widgets: 2 files
+Search Screens: 1 file
+Settings Screens: 1 file
+Shared Widgets: 5 files
+
+All files use:
+- ConsumerWidget / ConsumerStatefulWidget for Riverpod
+- DreamTheme colors for consistent styling
+- Deep purple/blue night sky aesthetic
+- Quicksand font for dreamy feel
+- Modern animation and transitions
+- Responsive design with SafeArea
+- Error handling and empty states

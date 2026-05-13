@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -153,7 +154,66 @@ class _WebAppScreenState extends State<WebAppScreen> {
       final androidController =
           _controller.platform as AndroidWebViewController;
       androidController.setMediaPlaybackRequiresUserGesture(false);
+
+      // Android 13+ requires POST_NOTIFICATIONS at runtime. Without it the
+      // foreground-service notification that drives the lock-screen player
+      // is suppressed system-wide and the player silently disappears.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _requestAndroidNotificationPermission();
+      });
     }
+  }
+
+  Future<void> _requestAndroidNotificationPermission() async {
+    final status = await Permission.notification.status;
+    if (status.isGranted) return;
+
+    final result = await Permission.notification.request();
+
+    // First-time denial: silent. Will re-prompt on next launch.
+    // Permanent denial: one-time per-launch hint with a path to Settings,
+    // since the system will not show the prompt again.
+    if (result.isPermanentlyDenied && mounted) {
+      _showNotificationSettingsHint();
+    }
+  }
+
+  void _showNotificationSettingsHint() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1145),
+        title: const Text(
+          'Enable notifications',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Dream Valley uses a notification to show the lock-screen player '
+          'while a story is playing. Enable notifications in Settings to '
+          'see playback controls on your lock screen.',
+          style: TextStyle(color: Color(0xFFFFF3CD)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text(
+              'Not now',
+              style: TextStyle(color: Color(0xFFB0A8D6)),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              openAppSettings();
+            },
+            child: const Text(
+              'Open Settings',
+              style: TextStyle(color: Color(0xFF6B4CE6)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Handles messages from JavaScript (web player → Dart → Kotlin)

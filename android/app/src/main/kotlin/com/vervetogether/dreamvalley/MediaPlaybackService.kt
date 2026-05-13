@@ -45,6 +45,20 @@ class MediaPlaybackService : Service() {
 
         private var instance: MediaPlaybackService? = null
 
+        // Persists across START_STICKY service kill+recreate within the same
+        // app process. The system kills foreground services under memory
+        // pressure and re-invokes onStartCommand with a null intent; without
+        // this snapshot the service would come back showing default title
+        // (no notification reapplied) until the next user-driven content
+        // change refired metadata.
+        @Volatile private var lastTitle: String? = null
+        @Volatile private var lastArtist: String? = null
+        @Volatile private var lastAlbum: String? = null
+        @Volatile private var lastArtworkUrl: String? = null
+        @Volatile private var lastPosition: Long = 0L
+        @Volatile private var lastDuration: Long = 0L
+        @Volatile private var lastIsPlaying: Boolean = false
+
         fun getInstance(): MediaPlaybackService? = instance
     }
 
@@ -73,23 +87,44 @@ class MediaPlaybackService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         MediaButtonReceiver.handleIntent(mediaSession, intent)
 
-        when (intent?.action) {
+        // Null intent / unknown action = system recreated us after a
+        // START_STICKY kill. Reapply the last remembered state so the
+        // notification doesn't come back showing the default title.
+        if (intent?.action == null) {
+            restoreFromLastState()
+            return START_STICKY
+        }
+
+        when (intent.action) {
             ACTION_UPDATE_METADATA -> {
                 currentTitle = intent.getStringExtra("title") ?: currentTitle
                 currentArtist = intent.getStringExtra("artist") ?: currentArtist
                 currentAlbum = intent.getStringExtra("album") ?: currentAlbum
                 val artworkUrl = intent.getStringExtra("artworkUrl")
+
+                lastTitle = currentTitle
+                lastArtist = currentArtist
+                lastAlbum = currentAlbum
+                lastArtworkUrl = artworkUrl
+
                 updateMetadata(artworkUrl)
             }
             ACTION_UPDATE_STATE -> {
                 isPlaying = intent.getBooleanExtra("playing", false)
+                lastIsPlaying = isPlaying
                 updatePlaybackState()
                 updateNotification()
             }
             ACTION_UPDATE_POSITION -> {
                 currentPosition = intent.getLongExtra("position", 0)
                 currentDuration = intent.getLongExtra("duration", 0)
+                lastPosition = currentPosition
+                lastDuration = currentDuration
                 updatePlaybackState()
+                // Refresh the visible notification so it doesn't lag stale
+                // after a service kill+recreate (cheap on Android — the
+                // NotificationManager dedupes by ID).
+                updateNotification()
             }
             ACTION_STOP -> {
                 stopSelf()
@@ -98,6 +133,27 @@ class MediaPlaybackService : Service() {
         }
 
         return START_STICKY
+    }
+
+    /**
+     * Reapply the last-known metadata + state after the system recreated us
+     * with a null intent. Bitmap artwork doesn't survive instance recreation
+     * (instance fields reset), so we re-download it from the remembered URL.
+     */
+    private fun restoreFromLastState() {
+        val title = lastTitle ?: return  // nothing to restore — fresh process
+
+        currentTitle = title
+        lastArtist?.let { currentArtist = it }
+        lastAlbum?.let { currentAlbum = it }
+        currentPosition = lastPosition
+        currentDuration = lastDuration
+        isPlaying = lastIsPlaying
+
+        // updateMetadata applies title/artist/album synchronously, posts the
+        // notification, and kicks off async artwork download if URL non-null.
+        updateMetadata(lastArtworkUrl)
+        updatePlaybackState()
     }
 
     override fun onDestroy() {

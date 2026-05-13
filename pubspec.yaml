@@ -13,6 +13,10 @@ dependencies:
   # WebView (the app is a thin wrapper around https://dreamvalley.app)
   webview_flutter: ^4.13.1
 
+  # Runtime permissions (Android 13+ POST_NOTIFICATIONS for the
+  # foreground-service notification that drives the lock-screen player)
+  permission_handler: ^11.4.0
+
   # Icons
   cupertino_icons: ^1.0.6
 

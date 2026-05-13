@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dreamweaver/config/theme.dart';
 import 'package:dreamweaver/providers/user_provider.dart';
 import 'package:dreamweaver/features/auth/widgets/magic_button.dart';
+import 'package:dreamweaver/routing/route_constants.dart';
 
 class AgeSetupScreen extends ConsumerStatefulWidget {
   const AgeSetupScreen({Key? key}) : super(key: key);
@@ -40,7 +42,7 @@ class _AgeSetupScreenState extends ConsumerState<AgeSetupScreen> {
             duration: const Duration(milliseconds: 1500),
           ),
         );
-        Navigator.of(context).pushReplacementNamed('/home');
+        context.go(Routes.home);
       }
     } catch (e) {
       if (mounted) {
@@ -82,7 +84,7 @@ class _AgeSetupScreenState extends ConsumerState<AgeSetupScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: GestureDetector(
-                    onTap: _isLoading ? null : () => Navigator.of(context).pop(),
+                    onTap: _isLoading ? null : () => context.pop(),
                     child: Icon(
                       Icons.arrow_back_rounded,
                       color: DreamTheme.moonGlow,

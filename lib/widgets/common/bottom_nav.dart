@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:dreamweaver/config/theme.dart';
 
@@ -63,10 +64,7 @@ class _BottomNavState extends State<BottomNav> with TickerProviderStateMixin {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       child: BackdropFilter(
-        filter: const ColorFilter.mode(
-          Colors.black26,
-          BlendMode.multiply,
-        ),
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
             color: DreamTheme.primaryDark.withOpacity(0.7),

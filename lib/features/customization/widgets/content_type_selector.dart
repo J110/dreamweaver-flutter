@@ -19,7 +19,7 @@ class ContentTypeSelector extends StatelessWidget {
     },
     {
       'name': 'Poem',
-      'icon': Icons.feather_pen_outlined,
+      'icon': Icons.edit_outlined,
       'description': 'Lyrical poem',
     },
     {

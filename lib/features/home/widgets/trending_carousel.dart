@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dreamweaver/config/theme.dart';
 import 'package:dreamweaver/models/content_model.dart';
+import 'package:dreamweaver/routing/route_constants.dart';
 
 class TrendingCarousel extends StatefulWidget {
   final List<Content> trendingItems;
@@ -50,10 +52,7 @@ class _TrendingCarouselState extends State<TrendingCarousel> {
               final content = widget.trendingItems[index];
               return GestureDetector(
                 onTap: () {
-                  Navigator.of(context).pushNamed(
-                    '/content-detail',
-                    arguments: content,
-                  );
+                  context.push(Routes.contentDetailPath(content.id));
                 },
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 8),
@@ -84,22 +83,24 @@ class _TrendingCarouselState extends State<TrendingCarousel> {
                               ],
                             ),
                           ),
-                          child: content.imageUrl != null
+                          child: content.albumArtUrl.isNotEmpty
                               ? Image.network(
-                                  content.imageUrl!,
+                                  content.albumArtUrl,
                                   fit: BoxFit.cover,
                                 )
                               : Container(),
                         ),
                         // Overlay
                         Container(
-                          decoration: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withOpacity(0.8),
-                            ],
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.8),
+                              ],
+                            ),
                           ),
                         ),
                         // Content
@@ -133,7 +134,7 @@ class _TrendingCarouselState extends State<TrendingCarousel> {
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
-                                      content.type,
+                                      content.displayLabel,
                                       style: Theme.of(context)
                                           .textTheme
                                           .labelSmall
@@ -203,7 +204,7 @@ class _TrendingCarouselState extends State<TrendingCarousel> {
                     ),
               ),
               GestureDetector(
-                onTap: () => Navigator.of(context).pushNamed('/explore'),
+                onTap: () => context.push(Routes.contentLibrary),
                 child: Text(
                   'See All',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(

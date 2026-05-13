@@ -16,34 +16,21 @@ import 'package:dreamweaver/features/player/screens/player_screen.dart';
 import 'package:dreamweaver/features/subscription/screens/subscription_screen.dart';
 import 'package:dreamweaver/features/search/screens/search_screen.dart';
 import 'package:dreamweaver/features/settings/screens/settings_screen.dart';
-import 'package:dreamweaver/providers/auth_provider.dart';
 import 'package:dreamweaver/routing/route_constants.dart';
 
 /// App-wide router provider using GoRouter
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
 
   return GoRouter(
     initialLocation: Routes.splash,
     debugLogDiagnostics: true,
     redirect: (context, state) {
-      final isAuthenticated = authState is AuthAuthenticated;
-      final isOnAuthRoute = state.uri.path.startsWith('/auth');
       final isOnSplash = state.uri.path == Routes.splash;
 
       // Allow splash screen always
       if (isOnSplash) return null;
 
-      // Redirect unauthenticated users to login
-      if (!isAuthenticated && !isOnAuthRoute) {
-        return Routes.login;
-      }
-
-      // Redirect authenticated users away from auth screens
-      if (isAuthenticated && isOnAuthRoute) {
-        return Routes.home;
-      }
-
+      // No auth required — app is open like the web version
       return null;
     },
     routes: [
@@ -144,7 +131,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: Routes.categoryBrowse,
         builder: (context, state) {
           final categoryId = state.pathParameters['categoryId']!;
-          return CategoryBrowseScreen(categoryId: categoryId);
+          return CategoryBrowseScreen(categoryName: categoryId);
         },
       ),
 

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:dreamweaver/config/theme.dart';
 
@@ -152,8 +154,8 @@ class OrbitalStarsPainter extends CustomPainter {
 
     for (int i = 0; i < starCount; i++) {
       final angle = (2 * 3.14159 * i) / starCount;
-      final x = centerX + radius * Math.cos(angle);
-      final y = centerY + radius * Math.sin(angle);
+      final x = centerX + radius * math.cos(angle);
+      final y = centerY + radius * math.sin(angle);
 
       canvas.drawCircle(
         Offset(x, y),
@@ -166,13 +168,3 @@ class OrbitalStarsPainter extends CustomPainter {
   @override
   bool shouldRepaint(OrbitalStarsPainter oldDelegate) => true;
 }
-
-class Math {
-  static double cos(double radians) => math_cos(radians);
-  static double sin(double radians) => math_sin(radians);
-}
-
-import 'dart:math' as math;
-
-double math_cos(double x) => math.cos(x);
-double math_sin(double x) => math.sin(x);

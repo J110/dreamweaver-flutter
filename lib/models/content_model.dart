@@ -3,6 +3,8 @@
 /// The Content type is used in providers for generic content operations.
 /// Individual content implementations (Story, Poem, Song) extend ContentBase.
 
+import 'content/content_base.dart';
+
 export 'content/content_base.dart';
 export 'content/story_model.dart';
 export 'content/poem_model.dart';

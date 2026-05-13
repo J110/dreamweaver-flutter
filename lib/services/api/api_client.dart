@@ -1,5 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:dreamweaver/config/env.dart';
+import 'package:dreamweaver/models/content_model.dart';
+import 'package:dreamweaver/models/content/story_model.dart';
+import 'package:dreamweaver/models/user/user_model.dart';
+import 'package:dreamweaver/models/user/subscription_tier.dart';
 import 'package:dreamweaver/services/api/endpoints.dart';
 
 /// Custom exception for DreamWeaver API errors
@@ -696,4 +701,298 @@ class DreamWeaverApiClient {
   void dispose() {
     _dio.close();
   }
+}
+
+/// High-level API Client used by providers.
+///
+/// Wraps [DreamWeaverApiClient] and provides typed methods that return
+/// domain model objects (UserModel, Content, etc.) instead of raw Maps.
+class ApiClient {
+  late final DreamWeaverApiClient _raw;
+
+  ApiClient() : _raw = DreamWeaverApiClient(baseUrl: Env.apiBaseUrl);
+
+  ApiClient.withRaw(DreamWeaverApiClient raw) : _raw = raw;
+
+  /// Access the underlying raw client (for voice_provider, etc.)
+  DreamWeaverApiClient get raw => _raw;
+
+  /// Set auth token on the underlying client
+  void setAuthToken(String token) => _raw.setAuthToken(token);
+
+  /// Clear auth token
+  void clearAuthToken() => _raw.clearAuthToken();
+
+  // ===== AUTH =====
+
+  /// Register a new user on the backend after Firebase auth
+  Future<void> registerUser({
+    required String userId,
+    required String username,
+    required int childAge,
+  }) async {
+    await _raw.signUp(
+      username: username,
+      password: userId, // userId used as identifier; real password handled by Firebase
+      childAge: childAge,
+    );
+  }
+
+  /// Fetch the username for a given userId
+  Future<String> getUserUsername(String userId) async {
+    final data = await _raw.getProfile();
+    return data['username'] as String? ?? '';
+  }
+
+  // ===== USER =====
+
+  /// Get full user model
+  Future<UserModel> getUser(String userId) async {
+    final data = await _raw.getProfile();
+    return UserModel.fromJson(data);
+  }
+
+  /// Update user preferences on the backend
+  Future<void> updateUserPreferences({
+    required String userId,
+    int? childAge,
+    bool? enableNotifications,
+    bool? enableBackgroundMusic,
+    bool? enableParentalControls,
+    String? preferredVoice,
+    String? preferredTheme,
+    double? speechSpeed,
+  }) async {
+    final prefs = <String, dynamic>{};
+    if (childAge != null) prefs['childAge'] = childAge;
+    if (enableNotifications != null) prefs['enableNotifications'] = enableNotifications;
+    if (enableBackgroundMusic != null) prefs['enableBackgroundMusic'] = enableBackgroundMusic;
+    if (enableParentalControls != null) prefs['enableParentalControls'] = enableParentalControls;
+    if (preferredVoice != null) prefs['preferredVoice'] = preferredVoice;
+    if (preferredTheme != null) prefs['preferredTheme'] = preferredTheme;
+    if (speechSpeed != null) prefs['speechSpeed'] = speechSpeed;
+    await _raw.updatePreferences(prefs);
+  }
+
+  /// Get remaining daily quota for a user
+  Future<int> getDailyQuota(String userId) async {
+    final data = await _raw.getDailyQuota();
+    return data['remaining'] as int? ?? 0;
+  }
+
+  // ===== CONTENT =====
+
+  /// Get filtered content list
+  Future<List<Content>> getContentList({
+    String? type,
+    String? category,
+    int? ageMin,
+    int? ageMax,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final filters = <String, dynamic>{
+      if (type != null) 'type': type,
+      if (category != null) 'category': category,
+      if (ageMin != null) 'ageMin': ageMin,
+      if (ageMax != null) 'ageMax': ageMax,
+      'page': page,
+      'pageSize': pageSize,
+    };
+    final data = await _raw.getContentList(filters);
+    final items = data['items'] as List? ?? [];
+    return items
+        .map((item) => Story.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Get single content detail by ID
+  Future<Content> getContentDetail(String contentId) async {
+    final data = await _raw.getContentById(contentId);
+    return Story.fromJson(data);
+  }
+
+  /// Generate new content
+  Future<Content> generateContent({
+    required String userId,
+    required String contentType,
+    required int childAge,
+    String? theme,
+    String? length,
+    bool includeMusic = false,
+    bool includeSongs = false,
+    bool includePoems = false,
+    String? voiceId,
+    String? musicType,
+  }) async {
+    final params = <String, dynamic>{
+      'userId': userId,
+      'contentType': contentType,
+      'childAge': childAge,
+      if (theme != null) 'theme': theme,
+      if (length != null) 'length': length,
+      'includeMusic': includeMusic,
+      'includeSongs': includeSongs,
+      'includePoems': includePoems,
+      if (voiceId != null) 'voiceId': voiceId,
+      if (musicType != null) 'musicType': musicType,
+    };
+    final data = await _raw.generateContent(params);
+    return Story.fromJson(data);
+  }
+
+  /// Search content by query
+  Future<List<Content>> searchContent(String query) async {
+    final data = await _raw.searchContent(query);
+    final items = data['items'] as List? ?? [];
+    return items
+        .map((item) => Story.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  // ===== TRENDING =====
+
+  /// Get trending content
+  Future<List<Content>> getTrendingContent({int page = 1}) async {
+    final data = await _raw.getTrending(page: page);
+    final items = data['items'] as List? ?? [];
+    return items
+        .map((item) => Story.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Get trending content by category
+  Future<List<Content>> getTrendingByCategory(String category) async {
+    final data = await _raw.getTrendingByCategory(category);
+    final items = data['items'] as List? ?? [];
+    return items
+        .map((item) => Story.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Get weekly trending content
+  Future<List<Content>> getWeeklyTrending() async {
+    final data = await _raw.getWeeklyTrending();
+    final items = data['items'] as List? ?? [];
+    return items
+        .map((item) => Story.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Get trending content by age group
+  Future<List<Content>> getTrendingByAge(int childAge) async {
+    final data = await _raw.getTrending(page: 1);
+    final items = data['items'] as List? ?? [];
+    return items
+        .map((item) => Story.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  // ===== INTERACTIONS =====
+
+  /// Like content
+  Future<void> likeContent({
+    required String userId,
+    required String contentId,
+  }) async {
+    await _raw.likeContent(contentId);
+  }
+
+  /// Unlike content
+  Future<void> unlikeContent({
+    required String userId,
+    required String contentId,
+  }) async {
+    await _raw.unlikeContent(contentId);
+  }
+
+  /// Save content
+  Future<void> saveContent({
+    required String userId,
+    required String contentId,
+  }) async {
+    await _raw.saveContent(contentId);
+  }
+
+  /// Unsave content
+  Future<void> unsaveContent({
+    required String userId,
+    required String contentId,
+  }) async {
+    await _raw.unsaveContent(contentId);
+  }
+
+  /// Get user's liked content IDs
+  Future<List<String>> getUserLikes({required String userId}) async {
+    final data = await _raw.getUserLikes();
+    final items = data['items'] as List? ?? [];
+    return items.cast<String>();
+  }
+
+  /// Get user's saved content IDs
+  Future<List<String>> getUserSaves({required String userId}) async {
+    final data = await _raw.getUserSaves();
+    final items = data['items'] as List? ?? [];
+    return items.cast<String>();
+  }
+
+  /// Get user's liked content as full Content objects
+  Future<List<Content>> getLikedContent({required String userId}) async {
+    final data = await _raw.getUserLikes();
+    final items = data['content'] as List? ?? [];
+    return items
+        .map((item) => Story.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Get user's saved content as full Content objects
+  Future<List<Content>> getSavedContent({required String userId}) async {
+    final data = await _raw.getUserSaves();
+    final items = data['content'] as List? ?? [];
+    return items
+        .map((item) => Story.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  // ===== SUBSCRIPTIONS =====
+
+  /// Get available subscription tiers
+  Future<List<SubscriptionTier>> getSubscriptionTiers() async {
+    final data = await _raw.getTiers();
+    final items = data['tiers'] as List? ?? [];
+    return items
+        .map((item) => SubscriptionTier.fromString(item as String? ?? 'free'))
+        .toList();
+  }
+
+  /// Upgrade subscription tier
+  Future<void> upgradeTier({
+    required String userId,
+    required SubscriptionTier tier,
+  }) async {
+    await _raw.upgradeToTier(tier.name);
+  }
+
+  /// Cancel subscription
+  Future<void> cancelSubscription({required String userId}) async {
+    await _raw.upgradeToTier('free');
+  }
+
+  // ===== AUDIO (delegated to raw client) =====
+
+  /// Get voices
+  Future<Map<String, dynamic>> getVoices() => _raw.getVoices();
+
+  /// Get tones
+  Future<Map<String, dynamic>> getTones() => _raw.getTones();
+
+  /// Get engine info
+  Future<Map<String, dynamic>> getEngineInfo() => _raw.getEngineInfo();
+
+  /// Get voice preview URL
+  String getVoicePreviewUrl(String voiceId, {String tone = 'calm'}) =>
+      _raw.getVoicePreviewUrl(voiceId, tone: tone);
+
+  /// Cleanup
+  void dispose() => _raw.dispose();
 }

@@ -35,7 +35,7 @@ class AudioService {
           avAudioSessionCategory: AVAudioSessionCategory.playback,
           avAudioSessionCategoryOptions:
               AVAudioSessionCategoryOptions.duckOthers,
-          avAudioSessionMode: AVAudioSessionMode.default_,
+          avAudioSessionMode: AVAudioSessionMode.defaultMode,
           avAudioSessionRouteSharingPolicy:
               AVAudioSessionRouteSharingPolicy.defaultPolicy,
           androidAudioAttributes: AndroidAudioAttributes(
@@ -210,17 +210,17 @@ class AudioService {
   /// Stream of duration updates
   /// 
   /// Use this stream to update UI with total duration
-  Stream<Duration> get durationStream => _audioPlayer.durationStream;
+  Stream<Duration?> get durationStream => _audioPlayer.durationStream;
 
   /// Stream of player state changes
   /// 
   /// Use this stream to update UI with play/pause/stopped states
   Stream<PlayerState> get playerStateStream => _audioPlayer.playerStateStream;
 
-  /// Stream of buffering progress
-  /// 
+  /// Stream of buffered position updates
+  ///
   /// Use this stream to show loading/buffering progress
-  Stream<BufferingState> get bufferingStream => _audioPlayer.bufferingStateStream;
+  Stream<Duration> get bufferedPositionStream => _audioPlayer.bufferedPositionStream;
 
   /// Check if audio is currently playing
   bool get isPlaying => _audioPlayer.playing;

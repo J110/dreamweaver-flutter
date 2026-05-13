@@ -12,11 +12,8 @@ final subscriptionTierProvider = FutureProvider<SubscriptionTier?>((ref) async {
 
 /// Can generate content provider - checks daily quota against tier limits
 final canGenerateContentProvider = FutureProvider<bool>((ref) async {
-  final quotaAsync = ref.watch(dailyQuotaProvider);
-  final tierAsync = ref.watch(subscriptionTierProvider);
-
-  final quota = await quotaAsync;
-  final tier = await tierAsync;
+  final quota = await ref.watch(dailyQuotaProvider.future);
+  final tier = await ref.watch(subscriptionTierProvider.future);
 
   if (tier == null) return false;
 

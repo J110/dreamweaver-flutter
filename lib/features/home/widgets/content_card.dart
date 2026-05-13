@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dreamweaver/config/theme.dart';
 import 'package:dreamweaver/models/content_model.dart';
+import 'package:dreamweaver/routing/route_constants.dart';
 
 class ContentCard extends StatefulWidget {
   final Content content;
@@ -21,10 +23,7 @@ class _ContentCardState extends State<ContentCard> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).pushNamed(
-          '/content-detail',
-          arguments: widget.content,
-        );
+        context.push(Routes.contentDetailPath(widget.content.id));
       },
       child: Container(
         decoration: BoxDecoration(
@@ -53,24 +52,24 @@ class _ContentCardState extends State<ContentCard> {
                     ],
                   ),
                 ),
-                child: widget.content.imageUrl != null
+                child: widget.content.albumArtUrl.isNotEmpty
                     ? Image.network(
-                        widget.content.imageUrl!,
+                        widget.content.albumArtUrl,
                         fit: BoxFit.cover,
                       )
                     : Container(),
               ),
               // Content overlay
               Container(
-                decoration: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.7),
-                  ],
-                ).createShader(
-                  const Rect.fromLTWH(0, 0, double.infinity, double.infinity),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.7),
+                    ],
+                  ),
                 ),
               ),
               // Content details
@@ -89,7 +88,7 @@ class _ContentCardState extends State<ContentCard> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          widget.content.type,
+                          widget.content.displayLabel,
                           style: Theme.of(context)
                               .textTheme
                               .labelSmall
@@ -150,7 +149,7 @@ class _ContentCardState extends State<ContentCard> {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      widget.content.likes.toString(),
+                                      widget.content.likeCount.toString(),
                                       style: Theme.of(context)
                                           .textTheme
                                           .labelSmall

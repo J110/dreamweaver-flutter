@@ -166,7 +166,7 @@ class ProfileTab extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          user.subscriptionTier,
+                          user.subscriptionTier.displayName,
                           style: Theme.of(context)
                               .textTheme
                               .labelMedium

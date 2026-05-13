@@ -21,7 +21,7 @@ class AlbumArtDisplay extends StatelessWidget {
   IconData _getContentTypeIcon() {
     switch (contentType.toLowerCase()) {
       case 'poem':
-        return Icons.feather_pen_outlined;
+        return Icons.edit_outlined;
       case 'song':
         return Icons.music_note;
       default:

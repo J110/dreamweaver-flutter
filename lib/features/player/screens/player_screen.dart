@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dreamweaver/config/theme.dart';
-import 'package:dreamweaver/providers/audio_player_provider.dart';
+import 'package:dreamweaver/providers/audio_provider.dart';
 import 'package:dreamweaver/features/player/widgets/playback_controls.dart';
 import 'package:dreamweaver/features/player/widgets/progress_bar.dart';
 import 'package:dreamweaver/features/player/widgets/background_music_toggle.dart';
-import 'package:dreamweaver/widgets/common/loading_indicator.dart';
 
 class PlayerScreen extends ConsumerStatefulWidget {
   final String contentId;
@@ -44,339 +43,313 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
 
   @override
   Widget build(BuildContext context) {
-    final audioState = ref.watch(audioPlayerProvider);
+    final player = ref.watch(audioPlayerProvider);
 
-    return audioState.when(
-      data: (player) {
-        return Scaffold(
-          extendBodyBehindAppBar: true,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.expand_more),
-              onPressed: Navigator.of(context).pop,
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.expand_more),
+          onPressed: Navigator.of(context).pop,
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.favorite,
+              color: false
+                  ? DreamTheme.accent
+                  : Colors.white.withOpacity(0.7),
             ),
-            actions: [
-              IconButton(
-                icon: Icon(
-                  Icons.favorite,
-                  color: player.isFavorite
-                      ? DreamTheme.accent
-                      : Colors.white.withOpacity(0.7),
-                ),
-                onPressed: () {
-                  // Toggle favorite
-                },
-              ),
-            ],
+            onPressed: () {
+              // Toggle favorite
+            },
           ),
-          body: Stack(
-            children: [
-              // Animated starfield background
-              _buildStarfield(),
+        ],
+      ),
+      body: Stack(
+        children: [
+          // Animated starfield background
+          _buildStarfield(),
 
-              // Night sky gradient
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      DreamTheme.primaryDark.withOpacity(0.8),
-                      DreamTheme.primary.withOpacity(0.6),
-                    ],
+          // Night sky gradient
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  DreamTheme.primaryDark.withOpacity(0.8),
+                  DreamTheme.primary.withOpacity(0.6),
+                ],
+              ),
+            ),
+          ),
+
+          // Main content
+          SafeArea(
+            child: Column(
+              children: [
+                // Now Playing header
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Text(
+                    'Now Playing',
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelMedium
+                        ?.copyWith(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                 ),
-              ),
 
-              // Main content
-              SafeArea(
-                child: Column(
-                  children: [
-                    // Now Playing header
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Text(
-                        'Now Playing',
+                // Album art with glow
+                Expanded(
+                  child: Center(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                        vertical: 24,
+                        horizontal: 32,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: DreamTheme.primary.withOpacity(0.5),
+                            blurRadius: 30,
+                            spreadRadius: 5,
+                          ),
+                          BoxShadow(
+                            color: DreamTheme.secondary.withOpacity(0.3),
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: CachedNetworkImage(
+                          imageUrl: player.currentContent?.albumArtUrl ?? '',
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  DreamTheme.primary,
+                                  DreamTheme.secondary,
+                                ],
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.music_note,
+                              size: 64,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Content info
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      Text(
+                        player.currentContent?.title ?? 'Unknown Title',
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineSmall
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        (player.currentContent?.displayLabel ?? 'Story').toUpperCase(),
                         style: Theme.of(context)
                             .textTheme
                             .labelMedium
                             ?.copyWith(
-                              color: Colors.white.withOpacity(0.6),
+                              color: DreamTheme.accent,
                               fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w600,
                             ),
-                      ),
-                    ),
-
-                    // Album art with glow
-                    Expanded(
-                      child: Center(
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(
-                            vertical: 24,
-                            horizontal: 32,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: DreamTheme.primary.withOpacity(0.5),
-                                blurRadius: 30,
-                                spreadRadius: 5,
-                              ),
-                              BoxShadow(
-                                color: DreamTheme.secondary.withOpacity(0.3),
-                                blurRadius: 15,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: CachedNetworkImage(
-                              imageUrl: player.contentImageUrl ?? '',
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      DreamTheme.primary,
-                                      DreamTheme.secondary,
-                                    ],
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.music_note,
-                                  size: 64,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Content info
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Column(
-                        children: [
-                          Text(
-                            player.contentTitle ?? 'Unknown Title',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            player.contentType.toUpperCase(),
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelMedium
-                                ?.copyWith(
-                                  color: DreamTheme.accent,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Progress bar
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: ProgressBar(
-                        currentPosition: player.position,
-                        totalDuration: player.duration,
-                        bufferedPosition: player.bufferedPosition,
-                        onSeek: (position) {
-                          // Seek audio
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Playback controls
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: PlaybackControls(
-                        isPlaying: player.isPlaying,
-                        hasPlaylist: player.hasPlaylist,
-                        onPlayPause: () {
-                          if (player.isPlaying) {
-                            // Pause
-                          } else {
-                            // Play
-                          }
-                        },
-                        onNext: player.hasPlaylist ? () {} : null,
-                        onPrevious: player.hasPlaylist ? () {} : null,
-                        repeatMode: player.repeatMode,
-                        onRepeatChanged: (mode) {
-                          // Change repeat mode
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Background music & voice controls
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          BackgroundMusicToggle(
-                            isEnabled: player.backgroundMusicEnabled,
-                            volume: player.backgroundMusicVolume,
-                            onToggle: (enabled) {},
-                            onVolumeChanged: (volume) {},
-                          ),
-                          Column(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.speed),
-                                color: Colors.white.withOpacity(0.7),
-                                onPressed: () {
-                                  // Show speed selector
-                                },
-                              ),
-                              Text(
-                                '${player.speechSpeed.toStringAsFixed(1)}x',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(
-                                      color: Colors.white,
-                                    ),
-                              ),
-                            ],
-                          ),
-                          Column(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.volume_up),
-                                color: Colors.white.withOpacity(0.7),
-                                onPressed: () {
-                                  // Show volume slider
-                                },
-                              ),
-                              SizedBox(
-                                width: 40,
-                                height: 20,
-                                child: Slider(
-                                  value: player.volume,
-                                  onChanged: (value) {},
-                                  activeColor: DreamTheme.accent,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Text content toggle (if available)
-                    if (widget.textContent != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            setState(() => _showText = !_showText);
-                          },
-                          icon: Icon(_showText
-                              ? Icons.unfold_less
-                              : Icons.unfold_more),
-                          label: Text(_showText ? 'Hide Text' : 'Show Text'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: DreamTheme.secondary
-                                .withOpacity(0.3),
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                      ),
-
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-
-              // Text content overlay
-              if (_showText && widget.textContent != null)
-                Container(
-                  color: Colors.black.withOpacity(0.7),
-                  child: Column(
-                    children: [
-                      AppBar(
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        leading: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            setState(() => _showText = false);
-                          },
-                        ),
-                        title: const Text('Story Text'),
-                      ),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(16),
-                          child: Text(
-                            widget.textContent!,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  height: 1.6,
-                                ),
-                          ),
-                        ),
                       ),
                     ],
                   ),
                 ),
-            ],
-          ),
-        );
-      },
-      loading: () => Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                DreamTheme.primaryDark,
-                DreamTheme.primary,
+
+                const SizedBox(height: 32),
+
+                // Progress bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: ProgressBar(
+                    currentPosition: player.position,
+                    totalDuration: player.duration,
+                    bufferedPosition: Duration.zero,
+                    onSeek: (position) {
+                      // Seek audio
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Playback controls
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: PlaybackControls(
+                    isPlaying: player.isPlaying,
+                    hasPlaylist: false,
+                    onPlayPause: () {
+                      if (player.isPlaying) {
+                        // Pause
+                      } else {
+                        // Play
+                      }
+                    },
+                    onNext: false ? () {} : null,
+                    onPrevious: false ? () {} : null,
+                    repeatMode: 0,
+                    onRepeatChanged: (mode) {
+                      // Change repeat mode
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Background music & voice controls
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      BackgroundMusicToggle(
+                        isEnabled: player.isBackgroundMusicEnabled,
+                        volume: player.musicVolume,
+                        onToggle: (enabled) {},
+                        onVolumeChanged: (volume) {},
+                      ),
+                      Column(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.speed),
+                            color: Colors.white.withOpacity(0.7),
+                            onPressed: () {
+                              // Show speed selector
+                            },
+                          ),
+                          Text(
+                            '${player.speechSpeed.toStringAsFixed(1)}x',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  color: Colors.white,
+                                ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.volume_up),
+                            color: Colors.white.withOpacity(0.7),
+                            onPressed: () {
+                              // Show volume slider
+                            },
+                          ),
+                          SizedBox(
+                            width: 40,
+                            height: 20,
+                            child: Slider(
+                              value: player.musicVolume,
+                              onChanged: (value) {},
+                              activeColor: DreamTheme.accent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Text content toggle (if available)
+                if (widget.textContent != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        setState(() => _showText = !_showText);
+                      },
+                      icon: Icon(_showText
+                          ? Icons.unfold_less
+                          : Icons.unfold_more),
+                      label: Text(_showText ? 'Hide Text' : 'Show Text'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: DreamTheme.secondary
+                            .withOpacity(0.3),
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(height: 24),
               ],
             ),
           ),
-          child: const Center(
-            child: LoadingIndicator(size: LoadingSize.large),
-          ),
-        ),
-      ),
-      error: (error, stack) => Scaffold(
-        body: Center(
-          child: Text('Error: $error'),
-        ),
+
+          // Text content overlay
+          if (_showText && widget.textContent != null)
+            Container(
+              color: Colors.black.withOpacity(0.7),
+              child: Column(
+                children: [
+                  AppBar(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    leading: IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        setState(() => _showText = false);
+                      },
+                    ),
+                    title: const Text('Story Text'),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        widget.textContent!,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(
+                              color: Colors.white,
+                              height: 1.6,
+                            ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

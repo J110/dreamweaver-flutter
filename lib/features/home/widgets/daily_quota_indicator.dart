@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dreamweaver/config/theme.dart';
+import 'package:dreamweaver/routing/route_constants.dart';
 
 class DailyQuotaIndicator extends StatelessWidget {
   final int used;
@@ -106,7 +108,7 @@ class DailyQuotaIndicator extends StatelessWidget {
                     action: SnackBarAction(
                       label: 'Learn More',
                       onPressed: () {
-                        Navigator.of(context).pushNamed('/upgrade');
+                        context.push(Routes.subscription);
                       },
                     ),
                   ),

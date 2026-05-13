@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dreamweaver/config/theme.dart';
 import 'package:dreamweaver/widgets/common/dream_app_bar.dart';
 import 'package:dreamweaver/providers/voice_provider.dart';
 import 'package:dreamweaver/providers/audio_provider.dart';
-import 'package:dreamweaver/features/customization/screens/voice_selection_screen.dart';
+import 'package:dreamweaver/routing/route_constants.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -62,11 +63,7 @@ class SettingsScreen extends ConsumerWidget {
                     '${voiceState.selectedVoice.name} (${voiceState.selectedVoice.gender.displayName})',
                     Icons.record_voice_over,
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const VoiceSelectionScreen(),
-                        ),
-                      );
+                      context.push(Routes.voiceSelection);
                     },
                   ),
                   _buildToneSettingsTile(context, ref, voiceState),

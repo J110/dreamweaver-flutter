@@ -116,6 +116,7 @@ class Story extends ContentBase {
     List<String> categories = const [],
     String theme = 'default',
     bool isGenerated = false,
+    String? storyType,
   }) : super(
     id: id,
     title: title,
@@ -133,6 +134,7 @@ class Story extends ContentBase {
     categories: categories,
     theme: theme,
     isGenerated: isGenerated,
+    storyType: storyType,
   );
 
   Story copyWith({
@@ -217,6 +219,7 @@ class Story extends ContentBase {
       categories: baseData['categories'],
       theme: baseData['theme'],
       isGenerated: baseData['isGenerated'],
+      storyType: baseData['storyType'],
     );
   }
 

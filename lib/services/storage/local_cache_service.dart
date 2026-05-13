@@ -7,9 +7,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 /// - Content metadata
 /// - Cache data with optional TTL-based expiry
 class LocalCacheService {
-  static const String _userBox = 'user_box';
-  static const String _contentBox = 'content_box';
-  static const String _preferencesBox = 'preferences_box';
+  static const String _userBoxName = 'user_box';
+  static const String _contentBoxName = 'content_box';
+  static const String _preferencesBoxName = 'preferences_box';
 
   late Box<Map<String, dynamic>> _userBox;
   late Box<Map<String, dynamic>> _contentBox;
@@ -28,9 +28,9 @@ class LocalCacheService {
       // This is optional if storing only Maps and primitives
 
       // Open boxes
-      _userBox = await Hive.openBox<Map<String, dynamic>>(_userBox);
-      _contentBox = await Hive.openBox<Map<String, dynamic>>(_contentBox);
-      _preferencesBox = await Hive.openBox<Map<String, dynamic>>(_preferencesBox);
+      _userBox = await Hive.openBox<Map<String, dynamic>>(_userBoxName);
+      _contentBox = await Hive.openBox<Map<String, dynamic>>(_contentBoxName);
+      _preferencesBox = await Hive.openBox<Map<String, dynamic>>(_preferencesBoxName);
 
       _initialized = true;
     } catch (e) {

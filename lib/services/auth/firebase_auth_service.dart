@@ -120,7 +120,7 @@ class FirebaseAuthService {
       }
 
       final tokenResult = await user.getIdTokenResult(forceRefresh);
-      return tokenResult.token;
+      return tokenResult.token ?? '';
     } catch (e) {
       throw FirebaseAuthServiceException(
         'Failed to get ID token: $e',

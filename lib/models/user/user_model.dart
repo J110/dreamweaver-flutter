@@ -12,6 +12,8 @@ class UserModel {
   final List<String> savedContentIds;
   final UserPreferences preferences;
   final Map<String, int> todayUsage;
+  final int storiesGenerated;
+  final int daysActive;
 
   UserModel({
     required this.id,
@@ -24,6 +26,8 @@ class UserModel {
     this.savedContentIds = const [],
     required this.preferences,
     this.todayUsage = const {},
+    this.storiesGenerated = 0,
+    this.daysActive = 0,
   });
 
   UserModel copyWith({
@@ -37,6 +41,8 @@ class UserModel {
     List<String>? savedContentIds,
     UserPreferences? preferences,
     Map<String, int>? todayUsage,
+    int? storiesGenerated,
+    int? daysActive,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -49,6 +55,8 @@ class UserModel {
       savedContentIds: savedContentIds ?? this.savedContentIds,
       preferences: preferences ?? this.preferences,
       todayUsage: todayUsage ?? this.todayUsage,
+      storiesGenerated: storiesGenerated ?? this.storiesGenerated,
+      daysActive: daysActive ?? this.daysActive,
     );
   }
 
@@ -64,6 +72,8 @@ class UserModel {
       'savedContentIds': savedContentIds,
       'preferences': preferences.toJson(),
       'todayUsage': todayUsage,
+      'storiesGenerated': storiesGenerated,
+      'daysActive': daysActive,
     };
   }
 
@@ -83,6 +93,8 @@ class UserModel {
         json['preferences'] as Map<String, dynamic>? ?? {},
       ),
       todayUsage: Map<String, int>.from(json['todayUsage'] as Map? ?? {}),
+      storiesGenerated: json['storiesGenerated'] as int? ?? 0,
+      daysActive: json['daysActive'] as int? ?? 0,
     );
   }
 
@@ -96,11 +108,20 @@ class UserModel {
     return subscriptionExpiresAt!.isAfter(DateTime.now());
   }
 
+  /// Number of stories used today
+  int get dailyStoriesUsed => todayUsage['used'] ?? 0;
+
+  /// Daily story limit based on subscription tier
+  int get dailyStoriesLimit => subscriptionTier.dailyLimit;
+
   int get remainingDailyUsage {
     final used = todayUsage['used'] ?? 0;
     final limit = subscriptionTier.dailyLimit;
     return (limit - used).clamp(0, limit);
   }
+
+  /// Number of favorite content items
+  int get favoriteCount => favoriteContentIds.length;
 
   bool get canAddFavorite {
     return favoriteContentIds.length < subscriptionTier.maxFavorites;

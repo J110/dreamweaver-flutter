@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dreamweaver/models/common/voice_model.dart';
 import 'package:dreamweaver/services/api/api_client.dart';
+import 'package:dreamweaver/providers/auth_provider.dart';
 
 /// Voice selection state
 class VoiceSelectionState {
@@ -138,7 +139,7 @@ class VoiceSelectionNotifier extends StateNotifier<VoiceSelectionState> {
 final voiceSelectionProvider =
     StateNotifierProvider<VoiceSelectionNotifier, VoiceSelectionState>(
   (ref) {
-    final apiClient = DreamWeaverApiClient(baseUrl: 'http://localhost:8000');
-    return VoiceSelectionNotifier(apiClient);
+    final apiClient = ref.watch(apiClientProvider);
+    return VoiceSelectionNotifier(apiClient.raw);
   },
 );

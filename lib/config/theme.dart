@@ -22,6 +22,12 @@ class DreamTheme {
   static const Color sleepyPeach = Color(0xFFFFB6A3);
   static const Color magicTeal = Color(0xFF4ECDC4);
 
+  // ── Convenience Aliases (used across the app) ──
+  static const Color primary = primaryPurple;
+  static const Color accent = starYellow;
+  static const Color secondary = primaryPink;
+  static const Color primaryDark = midnightBlue;
+
   // ── Surface Colors ──
   static const Color cardDark = Color(0xFF1E1854);
   static const Color cardLight = Color(0xFFFFFFFF);
@@ -109,7 +115,7 @@ class DreamTheme {
         ),
         iconTheme: IconThemeData(color: textLight),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: cardDark,
         elevation: 0,
         shape: RoundedRectangleBorder(

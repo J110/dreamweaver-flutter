@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dreamweaver/config/theme.dart';
 import 'package:dreamweaver/providers/auth_provider.dart';
 import 'package:dreamweaver/features/auth/widgets/dream_text_field.dart';
 import 'package:dreamweaver/features/auth/widgets/magic_button.dart';
+import 'package:dreamweaver/routing/route_constants.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -57,7 +59,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               duration: const Duration(milliseconds: 1500),
             ),
           );
-          Navigator.of(context).pushReplacementNamed('/home');
+          context.go(Routes.home);
         },
       );
     }
@@ -166,7 +168,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: GestureDetector(
                     onTap: isLoading
                         ? null
-                        : () => Navigator.of(context).pushNamed('/signup'),
+                        : () => context.push(Routes.signup),
                     child: RichText(
                       text: TextSpan(
                         text: 'New here? ',

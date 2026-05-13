@@ -1,6 +1,6 @@
 /// Environment configuration for DreamWeaver
 class Env {
-  static const String appName = 'DreamWeaver';
+  static const String appName = 'Dream Valley';
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'http://localhost:8000/api/v1',

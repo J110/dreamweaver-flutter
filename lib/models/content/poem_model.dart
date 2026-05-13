@@ -49,6 +49,7 @@ class Poem extends ContentBase {
     List<String> categories = const [],
     String theme = 'default',
     bool isGenerated = false,
+    String? storyType,
   }) : super(
     id: id,
     title: title,
@@ -66,6 +67,7 @@ class Poem extends ContentBase {
     categories: categories,
     theme: theme,
     isGenerated: isGenerated,
+    storyType: storyType,
   );
 
   Poem copyWith({
@@ -138,6 +140,7 @@ class Poem extends ContentBase {
       categories: baseData['categories'],
       theme: baseData['theme'],
       isGenerated: baseData['isGenerated'],
+      storyType: baseData['storyType'],
     );
   }
 

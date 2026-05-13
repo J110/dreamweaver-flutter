@@ -22,6 +22,16 @@ enum ContentType {
   }
 }
 
+/// The six narrative traditions for story type diversity.
+const storyTypeDisplayNames = {
+  'folk_tale': 'Folk Tale',
+  'mythological': 'Mythological',
+  'fable': 'Fable',
+  'nature': 'Nature Story',
+  'slice_of_life': 'Slice of Life',
+  'dream': 'Dream',
+};
+
 abstract class ContentBase {
   final String id;
   final String title;
@@ -39,6 +49,7 @@ abstract class ContentBase {
   final List<String> categories;
   final String theme;
   final bool isGenerated;
+  final String? storyType;
 
   ContentBase({
     required this.id,
@@ -57,7 +68,16 @@ abstract class ContentBase {
     this.categories = const [],
     this.theme = 'default',
     this.isGenerated = false,
+    this.storyType,
   });
+
+  /// Returns the story type display name (e.g. "Folk Tale") or falls back to content type.
+  String get displayLabel {
+    if (storyType != null && storyTypeDisplayNames.containsKey(storyType)) {
+      return storyTypeDisplayNames[storyType]!;
+    }
+    return type.displayName;
+  }
 
   Map<String, dynamic> baseToJson() {
     return {
@@ -77,6 +97,7 @@ abstract class ContentBase {
       'categories': categories,
       'theme': theme,
       'isGenerated': isGenerated,
+      'storyType': storyType,
     };
   }
 
@@ -98,6 +119,7 @@ abstract class ContentBase {
       'categories': List<String>.from(json['categories'] as List? ?? []),
       'theme': json['theme'] as String? ?? 'default',
       'isGenerated': json['isGenerated'] as bool? ?? false,
+      'storyType': json['storyType'] as String? ?? json['story_type'] as String?,
     };
   }
 

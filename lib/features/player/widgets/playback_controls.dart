@@ -72,7 +72,7 @@ class _PlaybackControlsState extends State<PlaybackControls>
 
         // Skip backward 15s
         _buildSmallControlButton(
-          icon: Icons.replay_15,
+          icon: Icons.replay_10,
           onPressed: () {},
           size: 40,
         ),
@@ -82,7 +82,7 @@ class _PlaybackControlsState extends State<PlaybackControls>
 
         // Skip forward 15s
         _buildSmallControlButton(
-          icon: Icons.forward_15,
+          icon: Icons.forward_10,
           onPressed: () {},
           size: 40,
         ),

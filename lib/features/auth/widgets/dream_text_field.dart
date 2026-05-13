@@ -65,53 +65,47 @@ class _DreamTextFieldState extends State<DreamTextField> {
               width: _isFocused ? 2 : 1,
             ),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: BackdropFilter(
-              filter: null,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: DreamTheme.moonGlow.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TextField(
-                  controller: widget.controller,
-                  focusNode: _focusNode,
-                  enabled: widget.enabled,
-                  obscureText: widget.obscureText,
-                  keyboardType: widget.keyboardType,
-                  maxLines: widget.obscureText ? 1 : widget.maxLines,
-                  minLines: widget.minLines,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: DreamTheme.moonGlow,
-                        fontSize: 16,
-                      ),
-                  decoration: InputDecoration(
-                    hintText: widget.hintText,
-                    hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: DreamTheme.moonGlow.withOpacity(0.4),
-                          fontSize: 16,
-                        ),
-                    prefixIcon: widget.prefixIcon != null
-                        ? Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: widget.prefixIcon,
-                          )
-                        : null,
-                    suffixIcon: widget.suffixIcon != null
-                        ? Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: widget.suffixIcon,
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: widget.prefixIcon != null ? 8 : 16,
-                      vertical: 16,
-                    ),
-                    isDense: true,
+          child: Container(
+            decoration: BoxDecoration(
+              color: DreamTheme.moonGlow.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TextField(
+              controller: widget.controller,
+              focusNode: _focusNode,
+              enabled: widget.enabled,
+              obscureText: widget.obscureText,
+              keyboardType: widget.keyboardType,
+              maxLines: widget.obscureText ? 1 : widget.maxLines,
+              minLines: widget.minLines,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: DreamTheme.moonGlow,
+                    fontSize: 16,
                   ),
+              decoration: InputDecoration(
+                hintText: widget.hintText,
+                hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: DreamTheme.moonGlow.withOpacity(0.4),
+                      fontSize: 16,
+                    ),
+                prefixIcon: widget.prefixIcon != null
+                    ? Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: widget.prefixIcon,
+                      )
+                    : null,
+                suffixIcon: widget.suffixIcon != null
+                    ? Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: widget.suffixIcon,
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: widget.prefixIcon != null ? 8 : 16,
+                  vertical: 16,
                 ),
+                isDense: true,
               ),
             ),
           ),

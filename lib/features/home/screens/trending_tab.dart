@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dreamweaver/config/theme.dart';
 import 'package:dreamweaver/providers/content_provider.dart';
+import 'package:dreamweaver/providers/trending_provider.dart';
 import 'package:dreamweaver/providers/user_provider.dart';
 import 'package:dreamweaver/features/home/widgets/trending_carousel.dart';
 import 'package:dreamweaver/features/home/widgets/daily_quota_indicator.dart';

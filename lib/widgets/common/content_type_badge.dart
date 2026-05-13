@@ -14,7 +14,7 @@ class ContentTypeBadge extends StatelessWidget {
       case 'poem':
         return {
           'label': 'Poem',
-          'icon': Icons.feather_pen_outlined,
+          'icon': Icons.edit_outlined,
           'color': Colors.pink,
         };
       case 'song':

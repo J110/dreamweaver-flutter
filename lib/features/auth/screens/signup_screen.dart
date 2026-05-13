@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dreamweaver/config/theme.dart';
 import 'package:dreamweaver/providers/auth_provider.dart';
 import 'package:dreamweaver/features/auth/widgets/dream_text_field.dart';
 import 'package:dreamweaver/features/auth/widgets/magic_button.dart';
+import 'package:dreamweaver/routing/route_constants.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -86,7 +88,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               duration: const Duration(milliseconds: 1500),
             ),
           );
-          Navigator.of(context).pushNamed('/age-setup');
+          context.push(Routes.ageSetup);
         },
       );
     }
@@ -117,7 +119,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               children: [
                 // Back button
                 GestureDetector(
-                  onTap: isLoading ? null : () => Navigator.of(context).pop(),
+                  onTap: isLoading ? null : () => context.pop(),
                   child: Icon(
                     Icons.arrow_back_rounded,
                     color: DreamTheme.moonGlow,
@@ -226,7 +228,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   child: GestureDetector(
                     onTap: isLoading
                         ? null
-                        : () => Navigator.of(context).pushReplacementNamed('/login'),
+                        : () => context.go(Routes.login),
                     child: RichText(
                       text: TextSpan(
                         text: 'Already have an account? ',

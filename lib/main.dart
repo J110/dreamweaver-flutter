@@ -58,7 +58,7 @@ class _WebAppScreenState extends State<WebAppScreen> {
   bool _isLoading = true;
   bool _hasError = false;
 
-  // Android media bridge channels
+  // Native media bridge channels (iOS + Android share the same names)
   static const _mediaChannel =
       MethodChannel('com.vervetogether.dreamvalley/media');
   static const _mediaActionsChannel =
@@ -135,22 +135,24 @@ class _WebAppScreenState extends State<WebAppScreen> {
       )
       ..loadRequest(Uri.parse(kAppUrl));
 
-    // Android-specific: enable media autoplay + add media bridge
+    // Media bridge — works on both iOS and Android.
+    // mediaSessionManager.js posts to window.DreamValleyMedia; the native
+    // side (DreamValleyMediaBridge on iOS, MainActivity+MediaPlaybackService
+    // on Android) updates MPNowPlayingInfoCenter / MediaSessionCompat and
+    // sends remote-command events back via _mediaActionsChannel.
+    _controller.addJavaScriptChannel(
+      'DreamValleyMedia',
+      onMessageReceived: _onMediaMessage,
+    );
+    _mediaActionsChannel
+        .receiveBroadcastStream()
+        .listen(_onNativeMediaAction);
+
+    // Android-specific WebView tuning for media autoplay.
     if (Platform.isAndroid) {
       final androidController =
           _controller.platform as AndroidWebViewController;
       androidController.setMediaPlaybackRequiresUserGesture(false);
-
-      // Add JavaScript channel for media session bridge
-      _controller.addJavaScriptChannel(
-        'DreamValleyMedia',
-        onMessageReceived: _onMediaMessage,
-      );
-
-      // Listen for lock screen button taps from native Kotlin
-      _mediaActionsChannel
-          .receiveBroadcastStream()
-          .listen(_onNativeMediaAction);
     }
   }
 

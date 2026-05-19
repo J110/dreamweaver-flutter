@@ -198,8 +198,16 @@ public class DreamValleyMediaBridge: NSObject, FlutterPlugin, FlutterStreamHandl
       return .success
     }
 
-    center.previousTrackCommand.isEnabled = false
-    center.nextTrackCommand.isEnabled = false
+    center.nextTrackCommand.isEnabled = true
+    center.nextTrackCommand.addTarget { [weak self] _ in
+      self?.sendAction("next")
+      return .success
+    }
+    center.previousTrackCommand.isEnabled = true
+    center.previousTrackCommand.addTarget { [weak self] _ in
+      self?.sendAction("previous")
+      return .success
+    }
   }
 
   // MARK: - Artwork loading

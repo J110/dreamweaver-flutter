@@ -191,11 +191,17 @@ class MediaPlaybackService : Service() {
                 override fun onSeekTo(pos: Long) {
                     MainActivity.sendMediaAction("seekto", pos / 1000.0)
                 }
+                override fun onRewind() {
+                    MainActivity.sendMediaAction("seekbackward")
+                }
+                override fun onFastForward() {
+                    MainActivity.sendMediaAction("seekforward")
+                }
                 override fun onSkipToNext() {
-                    // Not used for single story
+                    MainActivity.sendMediaAction("next")
                 }
                 override fun onSkipToPrevious() {
-                    MainActivity.sendMediaAction("seekbackward")
+                    MainActivity.sendMediaAction("previous")
                 }
             })
             isActive = true
@@ -256,7 +262,10 @@ class MediaPlaybackService : Service() {
                 PlaybackStateCompat.ACTION_PAUSE or
                 PlaybackStateCompat.ACTION_PLAY_PAUSE or
                 PlaybackStateCompat.ACTION_SEEK_TO or
-                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                PlaybackStateCompat.ACTION_REWIND or
+                PlaybackStateCompat.ACTION_FAST_FORWARD or
+                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                PlaybackStateCompat.ACTION_SKIP_TO_NEXT
             )
             .setState(
                 if (isPlaying) PlaybackStateCompat.STATE_PLAYING
@@ -289,13 +298,14 @@ class MediaPlaybackService : Service() {
                     .setShowActionsInCompactView(0, 1) // show skip-back + play/pause in compact
             )
 
-        // Add skip backward action
+        // Add rewind 10s action (uses ACTION_REWIND so it doesn't collide with
+        // SKIP_TO_PREVIOUS, which is now reserved for playlist nav).
         builder.addAction(
             NotificationCompat.Action.Builder(
                 R.drawable.ic_replay_10,
                 "Rewind",
                 MediaButtonReceiver.buildMediaButtonPendingIntent(
-                    this, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                    this, PlaybackStateCompat.ACTION_REWIND
                 )
             ).build()
         )

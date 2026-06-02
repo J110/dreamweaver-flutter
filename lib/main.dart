@@ -7,7 +7,9 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
-const String kAppUrl = 'https://dreamvalley.app';
+// ?source=app makes the web app route to the app (not the marketing page) even
+// without UA detection — belt-and-suspenders alongside the web-side UA fix.
+const String kAppUrl = 'https://dreamvalley.app/?source=app';
 const Color kDeepNight = Color(0xFF0D0B2E);
 
 void main() async {

@@ -130,9 +130,17 @@ class _WebAppScreenState extends State<WebAppScreen> {
         },
       ))
       ..setUserAgent(
-        'Mozilla/5.0 (Linux; Android 14) '
-        'AppleWebKit/537.36 (KHTML, like Gecko) '
-        'DreamValleyApp/1.0 Chrome/120.0.0.0 Mobile Safari/537.36',
+        // Keep the DreamValleyApp token on BOTH platforms — the web app's
+        // isNativeApp() keys off it. iOS must NOT masquerade as Android: a fake
+        // Android UA skewed analytics (iOS counted as android) and breaks
+        // iOS-specific web/paywall handling.
+        Platform.isIOS
+            ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) '
+                'AppleWebKit/605.1.15 (KHTML, like Gecko) '
+                'Mobile/15E148 DreamValleyApp/1.0'
+            : 'Mozilla/5.0 (Linux; Android 14) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'DreamValleyApp/1.0 Chrome/120.0.0.0 Mobile Safari/537.36',
       )
       ..loadRequest(Uri.parse(kAppUrl));
 

@@ -58,7 +58,7 @@ class WebAppScreen extends StatefulWidget {
   State<WebAppScreen> createState() => _WebAppScreenState();
 }
 
-class _WebAppScreenState extends State<WebAppScreen> {
+class _WebAppScreenState extends State<WebAppScreen> with WidgetsBindingObserver {
   late final WebViewController _controller;
   bool _isLoading = true;
   bool _hasError = false;
@@ -69,6 +69,10 @@ class _WebAppScreenState extends State<WebAppScreen> {
   static const _mediaActionsChannel =
       EventChannel('com.vervetogether.dreamvalley/media_actions');
 
+  // System bridge — open URLs in the external browser (Stripe checkout, #35).
+  static const _systemChannel =
+      MethodChannel('com.vervetogether.dreamvalley/system');
+
   // Native auth bridge — Keychain (iOS) / EncryptedSharedPreferences (Android).
   // See lib/native_auth_bridge.dart for the JS contract exposed at
   // window.DreamValleyAuth.{storeToken,readToken,clearToken,_selfTest}.
@@ -77,6 +81,12 @@ class _WebAppScreenState extends State<WebAppScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Lifecycle observer — on app resume (incl. return from external Safari
+    // checkout, whether by manual switch or a universal link foregrounding the
+    // app), nudge the web layer to re-check premium. The hook is cheap +
+    // guarded web-side (no-op unless a recent checkout is pending). #35 Q3.
+    WidgetsBinding.instance.addObserver(this);
 
     // Platform-specific WebView params for media playback
     late final PlatformWebViewControllerCreationParams params;
@@ -102,6 +112,8 @@ class _WebAppScreenState extends State<WebAppScreen> {
           // Re-inject the native-auth JS shim on every navigation (full-page
           // reloads and cross-origin pushes drop window state). Idempotent.
           _authBridge.injectShim();
+          // System bridge shim — window.DreamValleySystem.openExternal(url).
+          _injectSystemShim();
 
           // Inject a script to help unlock AudioContext on Android WebView.
           // Web Audio API requires a user gesture to resume a suspended context;
@@ -161,6 +173,19 @@ class _WebAppScreenState extends State<WebAppScreen> {
     // Attach the auth bridge: register the JS channel BEFORE the page loads
     // so window.DreamValleyAuth is available on first paint.
     _authBridge.attach(_controller);
+
+    // System bridge — web posts a URL to open in the EXTERNAL browser
+    // (Stripe checkout, #35). Dart forwards to native (UIApplication.open /
+    // ACTION_VIEW). Fire-and-forget; the message IS the url string.
+    _controller.addJavaScriptChannel(
+      'DreamValleySystemRequest',
+      onMessageReceived: (JavaScriptMessage msg) {
+        final url = msg.message;
+        if (url.isNotEmpty) {
+          _systemChannel.invokeMethod('openExternal', {'url': url});
+        }
+      },
+    );
 
     // Media bridge — works on both iOS and Android.
     // mediaSessionManager.js posts to window.DreamValleyMedia; the native
@@ -240,6 +265,40 @@ class _WebAppScreenState extends State<WebAppScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Return-to-app (manual switch OR universal link foregrounding). The web
+      // hook is guarded: no-op unless a recent checkout is pending. #35 Q3.
+      _controller.runJavaScript(
+        'window.__dvAppResumed && window.__dvAppResumed();',
+      );
+    }
+  }
+
+  /// window.DreamValleySystem.openExternal(url) — fire-and-forget bridge to the
+  /// native external-browser open. Re-injected per page load (window state is
+  /// dropped on full navigations). Idempotent.
+  void _injectSystemShim() {
+    _controller.runJavaScript('''
+      (function() {
+        if (window.DreamValleySystem && window.DreamValleySystem.isAvailable === true) return;
+        window.DreamValleySystem = {
+          isAvailable: true,
+          openExternal: function(url) {
+            try { window.DreamValleySystemRequest.postMessage(String(url)); } catch (e) {}
+          }
+        };
+      })();
+    ''');
   }
 
   /// Handles messages from JavaScript (web player → Dart → Kotlin)

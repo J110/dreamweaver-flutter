@@ -1,7 +1,9 @@
 package com.vervetogether.dreamvalley
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -20,6 +22,7 @@ class MainActivity : FlutterActivity() {
         private const val MEDIA_CHANNEL = "com.vervetogether.dreamvalley/media"
         private const val MEDIA_ACTIONS_CHANNEL = "com.vervetogether.dreamvalley/media_actions"
         private const val AUTH_CHANNEL = "com.vervetogether.dreamvalley/auth"
+        private const val SYSTEM_CHANNEL = "com.vervetogether.dreamvalley/system"
 
         private var actionSink: EventChannel.EventSink? = null
 
@@ -51,6 +54,33 @@ class MainActivity : FlutterActivity() {
                     }
                     "read" -> result.success(authStorage.read())
                     "clear" -> result.success(authStorage.clear())
+                    else -> result.notImplemented()
+                }
+            }
+
+        // System: open a URL in the EXTERNAL browser (Stripe checkout, #35).
+        // Mirror of iOS DreamValleySystemBridge — keeps digital-goods checkout
+        // out of the app WebView (reader-app compliance).
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SYSTEM_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "openExternal" -> {
+                        val url = call.argument<String>("url")
+                        if (url.isNullOrEmpty()) {
+                            result.success(false)
+                        } else {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                startActivity(intent)
+                                result.success(true)
+                            } catch (e: Exception) {
+                                Log.e("DVSystem", "openExternal failed: ${e.message}", e)
+                                result.success(false)
+                            }
+                        }
+                    }
                     else -> result.notImplemented()
                 }
             }

@@ -62,6 +62,10 @@ android {
 dependencies {
     implementation("androidx.media:media:1.7.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    // Native auth-token storage (DreamValleyAuthStorage). Backs the Dart
+    // bridge at lib/native_auth_bridge.dart with Android-Keystore-rooted
+    // AES256_GCM EncryptedSharedPreferences. Required for #35 native restore.
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }
 
 flutter {

@@ -1,7 +1,10 @@
 name: dreamweaver
 description: A magical bedtime story app for kids powered by AI
 publish_to: 'none'
-version: 1.0.0+4
+# 2.0.0 — reviewed paywall-capable build (#35). UA bumps to DreamValleyApp/2.0;
+# backend treats <2.0 as legacy (un-paywalled) so old-build users aren't
+# stranded when PAYWALL_NATIVE_ENABLED flips.
+version: 2.0.0+5
 
 environment:
   sdk: '>=3.2.0 <4.0.0'

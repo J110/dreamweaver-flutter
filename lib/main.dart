@@ -7,6 +7,8 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
+import 'native_auth_bridge.dart';
+
 // ?source=app makes the web app route to the app (not the marketing page) even
 // without UA detection — belt-and-suspenders alongside the web-side UA fix.
 const String kAppUrl = 'https://dreamvalley.app/?source=app';
@@ -67,6 +69,11 @@ class _WebAppScreenState extends State<WebAppScreen> {
   static const _mediaActionsChannel =
       EventChannel('com.vervetogether.dreamvalley/media_actions');
 
+  // Native auth bridge — Keychain (iOS) / EncryptedSharedPreferences (Android).
+  // See lib/native_auth_bridge.dart for the JS contract exposed at
+  // window.DreamValleyAuth.{storeToken,readToken,clearToken,_selfTest}.
+  final NativeAuthBridge _authBridge = NativeAuthBridge();
+
   @override
   void initState() {
     super.initState();
@@ -91,6 +98,10 @@ class _WebAppScreenState extends State<WebAppScreen> {
         },
         onPageFinished: (_) {
           if (mounted) setState(() => _isLoading = false);
+
+          // Re-inject the native-auth JS shim on every navigation (full-page
+          // reloads and cross-origin pushes drop window state). Idempotent.
+          _authBridge.injectShim();
 
           // Inject a script to help unlock AudioContext on Android WebView.
           // Web Audio API requires a user gesture to resume a suspended context;
@@ -132,19 +143,24 @@ class _WebAppScreenState extends State<WebAppScreen> {
         },
       ))
       ..setUserAgent(
-        // Keep the DreamValleyApp token on BOTH platforms — the web app's
-        // isNativeApp() keys off it. iOS must NOT masquerade as Android: a fake
-        // Android UA skewed analytics (iOS counted as android) and breaks
-        // iOS-specific web/paywall handling.
+        // DreamValleyApp/2.0 — the reviewed paywall-capable build. Backend
+        // UA-version-gates paywall on this token: <2.0 is treated as legacy
+        // (un-paywalled) so old-build users aren't stranded mid-flip.
+        // iOS must NOT masquerade as Android — a fake Android UA skewed
+        // analytics and breaks iOS-specific web/paywall handling.
         Platform.isIOS
             ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) '
                 'AppleWebKit/605.1.15 (KHTML, like Gecko) '
-                'Mobile/15E148 DreamValleyApp/1.0'
+                'Mobile/15E148 DreamValleyApp/2.0'
             : 'Mozilla/5.0 (Linux; Android 14) '
                 'AppleWebKit/537.36 (KHTML, like Gecko) '
-                'DreamValleyApp/1.0 Chrome/120.0.0.0 Mobile Safari/537.36',
+                'DreamValleyApp/2.0 Chrome/120.0.0.0 Mobile Safari/537.36',
       )
       ..loadRequest(Uri.parse(kAppUrl));
+
+    // Attach the auth bridge: register the JS channel BEFORE the page loads
+    // so window.DreamValleyAuth is available on first paint.
+    _authBridge.attach(_controller);
 
     // Media bridge — works on both iOS and Android.
     // mediaSessionManager.js posts to window.DreamValleyMedia; the native

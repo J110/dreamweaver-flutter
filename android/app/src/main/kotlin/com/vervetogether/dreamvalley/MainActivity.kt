@@ -19,6 +19,7 @@ class MainActivity : FlutterActivity() {
     companion object {
         private const val MEDIA_CHANNEL = "com.vervetogether.dreamvalley/media"
         private const val MEDIA_ACTIONS_CHANNEL = "com.vervetogether.dreamvalley/media_actions"
+        private const val AUTH_CHANNEL = "com.vervetogether.dreamvalley/auth"
 
         private var actionSink: EventChannel.EventSink? = null
 
@@ -36,6 +37,23 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // Dart → Kotlin: durable identity storage (EncryptedSharedPreferences).
+        // Mirror of iOS DreamValleyAuthStorage. Write-back-verify lives inside
+        // the storage class — Dart only forwards the boolean result.
+        val authStorage = DreamValleyAuthStorage(applicationContext)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, AUTH_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "store" -> {
+                        val token = call.argument<String>("token") ?: ""
+                        result.success(authStorage.store(token))
+                    }
+                    "read" -> result.success(authStorage.read())
+                    "clear" -> result.success(authStorage.clear())
+                    else -> result.notImplemented()
+                }
+            }
 
         // Dart → Kotlin: receive media commands from the web player
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, MEDIA_CHANNEL)

@@ -25,6 +25,9 @@ import MediaPlayer
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "DreamValleyMediaBridge") {
       DreamValleyMediaBridge.register(with: registrar)
     }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "DreamValleyAuthStorage") {
+      DreamValleyAuthStorage.register(with: registrar)
+    }
   }
 }
 

@@ -7,6 +7,17 @@ real test pass. Run it methodically before submission.
 All pieces ship DARK. `PAYWALL_NATIVE_ENABLED` flips only AFTER approval AND a
 deliberate, separate owner decision.
 
+> **v1 = TEXT-ONLY native upgrade (supersedes D1).** The native upgrade CTA is
+> informational only — "Subscribe at dreamvalley.app", no tappable checkout
+> link/button. The v1 native monetization bridge is: free → text-only CTA →
+> user subscribes on **web** → returns → **restore** (or same-session
+> boot-read) activates premium. Restore (A/D) + boot-read ARE the whole v1
+> bridge. **Scenario 1 (native in-app pay) does NOT exist in v1** and is removed
+> from this plan. The openExternal bridge + Stripe-return re-fetch are BUILT and
+> intact but DORMANT on native v1 (no native branch triggers them) — kept for
+> IAP-next / web use. IAP is the planned **immediate next version** (~v2.1);
+> text-only is the fast-safe v1 while IAP is built, not the permanent model.
+
 ---
 
 ## 0. Prerequisites & test arrangement (READ FIRST — the plan is unrunnable without this)
@@ -15,7 +26,7 @@ deliberate, separate owner decision.
 On prod, native is **dormant**: `PAYWALL_NATIVE_ENABLED=false` → the backend
 forces `is_premium=true` for every `DreamValleyApp/*` UA. So on a prod-pointing
 build, **every native user is premium regardless** — you cannot observe
-free-vs-premium, which scenarios 1, 4, and the premium half of 2 all require.
+free-vs-premium, which scenarios 2 (premium half) and 4 require.
 
 **Resolution — test against a non-prod environment with native paywall ON:**
 - Build variant with `kAppUrl` → the **Vercel test web URL** (not
@@ -81,31 +92,24 @@ Inspectable build. WebView Web Inspector open.
 
 ---
 
-## 2. Scenario 1 — new user pays (Stripe-return + webhook race)
+## 2. Native upgrade CTA is TEXT-ONLY (v1 — no in-app pay)
 
-Test env (native paywall ON). Fresh install, no prior token.
-**See §8 first — confirm the native upgrade affordance is settled before this.**
+Any build (the CTA gating is `isNativeApp()`, paywall-flag independent).
 
-- [ ] Fresh install → onboard → land as **FREE** (paywall CTA visible, premium
-      content locked).
-- [ ] Tap upgrade → checkout opens in **EXTERNAL Safari** (NOT the app WebView).
-      Log: `[DVSystem] openExternal: opened=true`.
-- [ ] Console: `localStorage.getItem('dv_checkout_pending')` → a timestamp.
-- [ ] Pay in Safari with the test card.
-- [ ] Return to the app (swipe / app switcher).
-- [ ] On resume the app routes to `/upgrade/success`, polls, and within **~18s**
-      flips to **PREMIUM** → returns to app, premium content unlocked.
-      (Resume fired `__dvAppResumed`; `effective_premium` → true.)
-- [ ] `dv_checkout_pending` is now cleared.
+- [ ] On native, the upgrade screen (`/upgrade`) shows **"Subscribe at
+      dreamvalley.app, then restore below."** as TEXT — NO checkout button, NO
+      tappable external-payment link, NO StoreKit buy button.
+- [ ] A **"Restore subscription"** button is present → tapping it opens
+      `/restore` (the working v1 bridge).
+- [ ] In the player's locked-content gate, native shows the same text-only
+      "Subscribe at dreamvalley.app" + a "Restore subscription" link to
+      `/restore`.
+- [ ] Confirm tapping upgrade does NOT open external Safari and does NOT fire
+      `[DVSystem] openExternal` (the openExternal/Stripe-return bridge is
+      dormant on native v1 — built but untriggered).
 
-**Webhook-race sub-test:**
-- [ ] Induce/observe webhook lag (Stripe dashboard → delay/resend the
-      `customer.subscription.created` / `invoice.payment_succeeded`). Confirm
-      `/upgrade/success` KEEPS polling (cache-busted, 9×2s) and confirms when the
-      webhook lands — never shows fake premium.
-- [ ] If lag > ~18s: confirm the soft **timeout** state (no false "you're free",
-      no false success). Reopen / next `getCurrent` reflects premium once the
-      webhook lands.
+*Scenario 1 (native in-app pay) is intentionally absent in v1 — see the
+text-only callout at the top. Native users subscribe on web, then restore.*
 
 ---
 
@@ -206,31 +210,23 @@ Repeat §1–§6 on a physical Android device:
 
 ---
 
-## 8. COMPLIANCE DECISION — settle BEFORE submission (affects §2 and the build)
+## 8. COMPLIANCE — SETTLED: text-only v1 (supersedes D1)
 
-There is a tension to resolve about the native upgrade affordance:
-- **D1 (this session):** "reader-app, no IAP, no RAA, **external Stripe checkout,
-  link to account page with upgrade**." → native links out to the account/upgrade
-  page (reader-app allowance, guideline 3.1.3(a)). The openExternal + resume
-  re-fetch (§2) supports exactly this.
-- **native_build_requirements #3 (older, conservative):** native upgrade is
-  **TEXT ONLY** — "Subscribe at dreamvalley.app", no clickable external-payment
-  link.
+Resolved 2026-06-04: **v1 native is TEXT-ONLY** — "Subscribe at dreamvalley.app",
+no tappable checkout link/button. Rationale: IAP is the immediate next version
+(~v2.1), so the linked-reader-app path (D1) would be a throwaway middle step
+(build it, clear review, rip it out for IAP). Skip the disposable step.
 
-These disagree on whether native has a tappable upgrade/account link. **Pick
-one before submit:**
-- (a) **Reader-app account link (D1, recommended):** native shows an upgrade
-  screen with a link that opens the account/checkout page externally. Scenario 1
-  native-pay (§2) is a real flow. Justify as a reader app (3.1.3) in review
-  notes. If review pushes back, fall back to (b).
-- (b) **Text-only (conservative):** native shows benefits + "Subscribe at
-  dreamvalley.app" as text, NO tappable checkout. Then scenario 1 native-pay
-  does NOT exist on native — users subscribe on web, the app reflects via
-  restore (§3) / boot-read (§4). The openExternal bridge stays dormant on
-  native (or is used only for a "Manage subscription" link).
+This is the cleanest reader-app posture and the lowest rejection risk:
+- No external-payment link → no guideline 3.1.3(a) external-link justification.
+- No External Link Account Entitlement (RAA) application.
+- No StoreKit / IAP products (those come in v2.1).
+- Restore link is allowed in reader apps.
 
-Whichever is chosen must match what you DECLARE to Apple and what `isNativeApp()`
-renders. This is the single most likely rejection vector — decide deliberately.
+The openExternal bridge + Stripe-return re-fetch stay BUILT and intact but
+DORMANT on native v1 (verified in §2: no native branch triggers them) — kept for
+IAP-next and web. text-only is the fast-safe v1, NOT the permanent monetization
+model.
 
 ---
 
@@ -248,15 +244,15 @@ renders. This is the single most likely rejection vector — decide deliberately
 
 ---
 
-## 10. Declarations (per the §8 decision — reader-app / no IAP / no RAA)
+## 10. Declarations (text-only reader app — no IAP, no RAA)
 
 - [ ] **App Privacy:** declare data collection accurately (email for restore,
       analytics) — correct the prior "no data collection" if it was declared.
-- [ ] **No IAP:** no StoreKit / in-app purchase products declared.
+- [ ] **No IAP:** no StoreKit / in-app purchase products declared (IAP is v2.1).
 - [ ] **No External Link Account Entitlement (RAA)** for v1.
-- [ ] **Reader-app CTA** matches §8 choice — `isNativeApp()` gates it; verify on
-      the build that native renders the chosen affordance (link vs text-only) and
-      NO StoreKit buy button.
+- [ ] **Text-only CTA:** verify on the build that native renders ONLY "Subscribe
+      at dreamvalley.app" text + a Restore link — NO checkout button, NO tappable
+      external-payment link, NO StoreKit buy button (gated by `isNativeApp()`).
 - [ ] **Review notes:** state it's a reader app (audio stories); subscriptions
       are managed on the web; restore brings an existing subscription into the app.
 - [ ] Bundle ID `com.vervetogether.dreamvalley`; name "Dream Valley Stories";

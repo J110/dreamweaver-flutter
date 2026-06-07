@@ -11,7 +11,14 @@ import 'native_auth_bridge.dart';
 
 // ?source=app makes the web app route to the app (not the marketing page) even
 // without UA detection — belt-and-suspenders alongside the web-side UA fix.
-const String kAppUrl = 'https://dreamvalley.app/?source=app';
+//
+// Prod URL is the compile-time default. Test builds point the WebView at the
+// test web tier via `--dart-define=DV_APP_URL=<url>`; the test URL lives only in
+// the build command, never in the repo, so a prod build (no define) cannot leak it.
+const String kAppUrl = String.fromEnvironment(
+  'DV_APP_URL',
+  defaultValue: 'https://dreamvalley.app/?source=app',
+);
 const Color kDeepNight = Color(0xFF0D0B2E);
 
 void main() async {

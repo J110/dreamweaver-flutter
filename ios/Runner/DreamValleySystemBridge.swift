@@ -23,7 +23,7 @@ public class DreamValleySystemBridge: NSObject, FlutterPlugin {
     }
   }
 
-  private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case "openExternal":
       let args = call.arguments as? [String: Any] ?? [:]

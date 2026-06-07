@@ -79,7 +79,7 @@ public class DreamValleyMediaBridge: NSObject, FlutterPlugin, FlutterStreamHandl
 
   // MARK: - MethodChannel handler
 
-  private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     let args = call.arguments as? [String: Any] ?? [:]
     switch call.method {
     case "updateMetadata":

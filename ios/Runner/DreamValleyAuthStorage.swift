@@ -34,7 +34,7 @@ public class DreamValleyAuthStorage: NSObject, FlutterPlugin {
     }
   }
 
-  private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case "store":
       let args = call.arguments as? [String: Any] ?? [:]
